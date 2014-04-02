@@ -476,27 +476,37 @@ public class GithubSecurityRealm extends SecurityRealm {
 			throws UsernameNotFoundException, DataAccessException {
 		GHUser user = null;
 
+		Log.info("XXX Getting authentication token");
 		GithubAuthenticationToken authToken =  (GithubAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
 
 		if (authToken == null) {
+			Log.info("XXX Not authentication token set, so we can't tell if the user exists");
 			throw new UserMayOrMayNotExistException("Could not get auth token.");
 		}
 
 		try {
 
+			Log.info("XXX Got auth token, trying to load group '" + username +"'");
 			GroupDetails group = loadGroupByGroupname(username);
 
 			if (group != null) {
+			    Log.info("XXX Found group... Apparently, that's not good.");
 				throw new UsernameNotFoundException ("user("+username+") is also an organization");
 			}
+			Log.info("XXX No such group found. Looking user instead.");
 
 			user = authToken.loadUser(username);
 
-			if (user != null)
+			Log.info("XXX No such group found. Looking user instead.");
+			if (user != null) {
+			    Log.info("XXX Found user, returning info");
 				return new GithubOAuthUserDetails(user);
-			else
+			} else {
+			    Log.info("XXX No known user by that name");
 				throw new UsernameNotFoundException("No known user: " + username);
+			}
 		} catch (IOException e) {
+			Log.info("XXX some sort of I/O exception occurred");
 			throw new DataRetrievalFailureException("loadUserByUsername (username=" + username +")", e);
 		}
 	}
